@@ -1,0 +1,2341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MORDEN NOTE</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@32,400,0,0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Lobster&family=Courier+Prime&family=Playfair+Display&family=Caveat&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    /* Import Google Font - Poppins */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+:root {
+  /* Dark theme colors */
+  --text-color: #edf3ff;
+  --subheading-color: #97a7ca;
+  --placeholder-color: #c3cdde;
+  --primary-color: #101623;
+  --secondary-color: #283045;
+  --secondary-hover-color: #333e58;
+  --scrollbar-color: #626a7f;
+}
+
+body.light-theme {
+  /* Light theme colors */
+  --text-color: #090c13;
+  --subheading-color: #7b8cae;
+  --placeholder-color: #606982;
+  --primary-color: #f3f7ff;
+  --secondary-color: #dce6f9;
+  --secondary-hover-color: #d2ddf2;
+  --scrollbar-color: #a2aac2;
+}
+
+body {
+  color: var(--text-color);
+  background: var(--primary-color);
+margin: 0;
+padding: 0;
+/* Pure page ki scrolling roki */
+overflow: hidden;
+    
+}
+
+/* --- NEW STYLES FOR MODAL AND BUTTONS --- */
+
+#open-chat-btn {
+  position: fixed;
+  top: 5px;
+  right: 125px;
+  padding-top:13px;
+  padding-left: 12px;
+  padding-bottom: 14px;
+  padding-right:13px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  border-radius:50%;
+  background:linear-gradient(tan,ivory,mintcream,mistyrose); /* Example color */
+  color:black;
+  z-index: 999;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: 0.3s ease;
+  backdrop-filter: blur(10px);
+  --webkit-backdrop-filter: blur(10px);
+  font-family: cursive;
+  height:50px;
+  width:50px;
+  display:flex;
+  
+  border:1px solid black;
+}
+
+#open-chat-btn:hover {
+  background: #0264e3;
+}
+
+#chat-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-color);
+  z-index: 1000;
+  display: none; /* Hidden by default */
+}
+
+#close-chat-btn {
+  position: absolute;
+  top: 25px; /* Adjusted padding */
+  left: 20px;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  border: none;
+  color: var(--text-color);
+  background: var(--secondary-color);
+  transition: 0.3s ease;
+  z-index: 1010; /* Above container content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#close-chat-btn:hover {
+  background: var(--secondary-hover-color);
+}
+
+/* --- END OF NEW STYLES --- */
+
+
+.container {
+  overflow-y: auto;
+  padding: 32px 0 60px;
+  /* Height is now 100% of the modal, not vh */
+  height: 100%; 
+  scrollbar-color: var(--scrollbar-color) transparent;
+  background:linear-gradient(mistyrose,mintcream,ghostwhite,mistyrose,skyblue);
+  /* The container itself is now the full height of the modal */
+  /* The old height calc(100vh - 127px) is not needed if prompt is fixed */
+}
+
+/* Re-adjusting container height calculation */
+.container {
+    height: 100vh; /* Make container full height of modal */
+    padding-bottom: 127px; /* Add padding for the fixed prompt bar */
+}
+
+
+.container :where(.app-header, .suggestions, .message, .prompt-wrapper) {
+  position: relative;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 20px;
+  max-width: 990px;
+}
+
+.container .app-header {
+  margin-top: 3vh;
+  /* Adding padding-left to not overlap with back button */
+  padding-left: 80px; 
+}
+
+.app-header .heading {
+  width: fit-content;
+  font-size: 3rem;
+  background: linear-gradient(to right, #1d7efd, #8f6fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-header .sub-heading {
+  font-size: 2.6rem;
+  margin-top: -5px;
+  color: var(--subheading-color);
+}
+
+.container .suggestions {
+  width: 100%;
+  list-style: none;
+  display: flex;
+  gap: 15px;
+  margin-top: 9.5vh;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+body.chats-active .container :where(.app-header, .suggestions) {
+  display: none;
+}
+
+/* ... (rest of your existing CSS, no changes needed) ... */
+
+.suggestions .suggestions-item {
+  cursor: pointer;
+  padding: 18px;
+  width: 228px;
+  flex-shrink: 0;
+  display: flex;
+  scroll-snap-align: center;
+  flex-direction: column;
+  align-items: flex-end;
+  border-radius: 12px;
+  justify-content: space-between;
+  background: var(--secondary-color);
+  transition: 0.3s ease;
+  color:olive;
+}
+
+.suggestions .suggestions-item:hover {
+  background: var(--secondary-hover-color);
+}
+
+.suggestions .suggestions-item .text {
+  font-size: 1.1rem;
+}
+
+.suggestions .suggestions-item .icon {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  font-size: 1.4rem;
+  margin-top: 35px;
+  align-self: flex-end;
+  align-items: center;
+  border-radius: 50%;
+  justify-content: center;
+  color: #1d7efd;
+  background: var(--primary-color);
+}
+
+.suggestions .suggestions-item:nth-child(2) .icon {
+  color: #28a745;
+}
+
+.suggestions .suggestions-item:nth-child(3) .icon {
+  color: #ffc107;
+}
+
+.suggestions .suggestions-item:nth-child(4) .icon {
+  color: #6f42c1;
+}
+
+.container .chats-container {
+  display: flex;
+  gap: 20px;
+  flex-direction: column;
+}
+
+.chats-container .message {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+}
+
+.chats-container .message .avatar {
+  width: 43px;
+  height: 43px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  border-radius: 50%;
+  padding: 6px;
+  margin-right: -7px;
+  background: var(--secondary-color);
+  border: 1px solid var(--secondary-hover-color);
+}
+
+.chats-container .message.loading .avatar {
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.chats-container .message .message-text {
+  padding: 3px 16px;
+  word-wrap: break-word;
+  white-space: pre-line;
+}
+
+.chats-container .bot-message {
+  margin: 9px auto;
+  color:black;
+
+}
+
+.chats-container .user-message {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.chats-container .user-message .message-text {
+  padding: 12px 16px;
+  max-width: 75%;
+  background:linear-gradient(tan,ivory);
+  border-radius: 13px 13px 3px 13px;
+  font-family: times;
+  border:1px solid black;
+  color:black;
+}
+
+.chats-container .user-message .img-attachment {
+  margin-top: -7px;
+  width: 50%;
+  border-radius: 13px 3px 13px 13px;
+}
+
+.chats-container .user-message .file-attachment {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 10px;
+  margin-top: -7px;
+  border-radius: 13px 3px 13px 13px;
+  background: var(--secondary-color);
+}
+
+.chats-container .user-message .file-attachment span {
+  color: #1d7efd;
+}
+
+.container .prompt-container {
+  position: fixed; /* This is correct, it will be fixed to the modal viewport */
+  width: 100%;
+  left: 0;
+  bottom:4px;
+  padding: 16px 0;
+  background:none;
+  /* Adding z-index to ensure it's above .container content */
+  z-index: 1005; 
+  border-radius:30px;
+  box-shadow: 0px 5px 5px rgba(0,0,0,0.3);
+  margin-left:2px;
+  margin-right:2px;
+  border:1px solid black;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.prompt-container :where(.prompt-wrapper, .prompt-form, .prompt-actions) {
+  display: flex;
+  gap: 12px;
+  height: 56px;
+  align-items: center;
+}
+
+.prompt-container .prompt-form {
+  height: 100%;
+  width: 100%;
+  border-radius: 130px;
+  background: var(--secondary-color);
+}
+
+.prompt-form .prompt-input {
+  width: 100%;
+  height: 100%;
+  background: none;
+  outline: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--text-color);
+  padding-left: 24px;
+}
+
+
+.prompt-form .prompt-input::placeholder {
+  color: var(--placeholder-color);
+}
+
+.prompt-wrapper button {
+  width: 56px;
+  height: 100%;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  border: none;
+  color: var(--text-color);
+  background: var(--secondary-color);
+  transition: 0.3s ease;
+}
+
+.prompt-wrapper :is(button:hover, #cancel-file-btn, .file-icon) {
+  background: var(--secondary-hover-color);
+}
+
+.prompt-form .prompt-actions {
+  gap: 5px;
+  margin-right: 7px;
+}
+
+.prompt-wrapper .prompt-form :where(.file-upload-wrapper, button, img) {
+  position: relative;
+  height: 45px;
+  width: 45px;
+}
+
+.prompt-form .prompt-actions #send-prompt-btn {
+  color: #fff;
+  display: none;
+  background: #1d7efd;
+}
+
+.prompt-form .prompt-input:valid~.prompt-actions #send-prompt-btn {
+  display: block;
+}
+
+.prompt-form #send-prompt-btn:hover {
+  background: #0264e3;
+}
+
+.prompt-form .file-upload-wrapper :where(button, img) {
+  display: none;
+  border-radius: 50%;
+  object-fit: cover;
+  position: absolute;
+}
+
+.prompt-form .file-upload-wrapper.active #add-file-btn {
+  display: none;
+}
+
+.prompt-form .file-upload-wrapper #add-file-btn,
+.prompt-form .file-upload-wrapper.active.img-attached img,
+.prompt-form .file-upload-wrapper.active.file-attached .file-icon,
+.prompt-form .file-upload-wrapper.active:hover #cancel-file-btn {
+  display: block;
+}
+
+.prompt-form :is(#stop-response-btn:hover, #cancel-file-btn) {
+  color: #d62939;
+}
+
+.prompt-wrapper .prompt-form .file-icon {
+  color: #1d7efd;
+}
+
+.prompt-form #stop-response-btn,
+body.bot-responding .prompt-form .file-upload-wrapper {
+  display: none;
+}
+
+body.bot-responding .prompt-form #stop-response-btn {
+  display: block;
+}
+
+.prompt-container .disclaimer-text {
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 16px 20px 0;
+  color: var(--placeholder-color);
+}
+
+/* Responsive media query code for small screens */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px 0 100px; /* Reduced top padding */
+  }
+
+  /* Adjust header for back button */
+  .container .app-header {
+    padding-left: 65px; /* Make space for smaller button */
+    margin-top: 15px; /* Align with button */
+  }
+
+  /* Adjust back button for mobile */
+  #close-chat-btn {
+    top: 15px;
+    left: 10px;
+    width: 45px;
+    height: 45px;
+  }
+  
+  .app-header :is(.heading, .sub-heading) {
+    font-size: 2rem;
+    line-height: 1.4;
+  }
+  
+  .app-header .sub-heading {
+    font-size: 1.7rem;
+  }
+  
+  .container .chats-container {
+    gap: 15px;
+  }
+  
+  .chats-container .bot-message {
+    margin: 4px auto;
+  }
+  
+  .prompt-container :where(.prompt-wrapper, .prompt-form, .prompt-actions) {
+    gap: 8px;
+    height: 53px;
+  }
+  
+  .prompt-container button {
+    width: 53px;
+  }
+  
+  .prompt-form :is(.file-upload-wrapper, button, img) {
+    height: 42px;
+    width: 42px;
+  }
+  
+  .prompt-form .prompt-input {
+    padding-left: 20px;
+  }
+  
+  .prompt-form .file-upload-wrapper.active #cancel-file-btn {
+    opacity: 0;
+  }
+  
+  .prompt-wrapper.hide-controls :where(#theme-toggle-btn, #delete-chats-btn) {
+    display: none;
+  }
+}
+    /* --- THEME & GLOBAL STYLES --- */
+    :root {
+      /* NEW Default theme (Daylight) */
+      --primary-bg: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+      --secondary-bg: rgba(255, 255, 255, 0.5);
+      --card-bg: rgba(255, 255, 255, 0.7);
+      --primary-text: #333333;
+      --accent-color: #6a82fb;
+      --header-title-color: #333;
+      --shadow-color: rgba(0, 0, 0, 0.1);
+      --font-roboto: 'Roboto', sans-serif;
+      --font-lobster: 'Lobster', cursive;
+      --font-courier: 'Courier Prime', monospace;
+      --font-playfair: 'Playfair Display', serif;
+      --font-caveat: 'Caveat', cursive;
+    }
+
+    body[data-app-theme="starlight"] {
+      --primary-bg: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      --secondary-bg: rgba(15, 32, 39, 0.8);
+      --card-bg: rgba(44, 83, 100, 0.7);
+      --primary-text: #E0E0E0;
+      --accent-color: #56CCF2;
+      --header-title-color: #FFFFFF;
+      --shadow-color: rgba(0, 0, 0, 0.4);
+    }
+
+    body[data-app-theme="sunset"] {
+      --primary-bg: linear-gradient(135deg, #ff7e5f, #feb47b);
+      --secondary-bg: rgba(255, 126, 95, 0.7);
+      --card-bg: rgba(254, 180, 123, 0.6);
+      --primary-text: #3D1E17; /* Darker text for readability */
+      --accent-color: #C70039;
+      --header-title-color: #FFFFFF;
+    }
+
+    body[data-app-theme="forest"] {
+      --primary-bg: linear-gradient(135deg, #233329, #415245, #637868);
+      --secondary-bg: rgba(20, 39, 31, 0.8);
+      --card-bg: rgba(65, 82, 69, 0.7);
+      --primary-text: #E8F5E9;
+      --accent-color: #A5D6A7;
+      --header-title-color: #FFFFFF;
+    }
+
+    body[data-app-theme="ocean"] {
+      --primary-bg: linear-gradient(135deg, #13547a, #80d0c7);
+      --secondary-bg: rgba(19, 84, 122, 0.8);
+      --card-bg: rgba(128, 208, 199, 0.6);
+      --primary-text: #0A2633; /* Darker text for readability */
+      --accent-color: #F7B733;
+      --header-title-color: #FFFFFF;
+    }
+
+    body[data-app-theme="rose"] {
+      --primary-bg: linear-gradient(135deg, #870000, #190a05);
+      --secondary-bg: rgba(135, 0, 0, 0.7);
+      --card-bg: rgba(25, 10, 5, 0.6);
+      --primary-text: #F5E0E0;
+      --accent-color: #FFC0CB;
+      --header-title-color: #FFFFFF;
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-roboto); -webkit-tap-highlight-color: transparent; }
+    body { background: var(--primary-bg); color: var(--primary-text); transition: background 0.5s ease; overflow: hidden; }
+
+    /* --- LAYOUT & SIDEBAR --- */
+    .app-container {
+      display: grid;
+      grid-template-areas: "header header" "sidebar main" "footer footer";
+      grid-template-rows: auto 1fr auto;
+      grid-template-columns: 70px 1fr;
+      height: 100vh;
+      transition: grid-template-columns 0.4s ease-in-out;
+    }
+    .sidebar {
+      grid-area: sidebar;
+      background: var(--secondary-bg);
+      backdrop-filter: blur(10px);
+      padding-top: 20px;
+      transition: transform 0.2s ease-in-out;
+      transform: translateX(0);
+      overflow: hidden;
+    }
+    /* Collapsed state */
+    .app-container.sidebar-collapsed {
+      grid-template-columns: 0 1fr;
+    }
+    .app-container.sidebar-collapsed .sidebar {
+      transform: translateX(-100%);
+    }
+
+    #main-header {
+      grid-area: header;
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      background-color: var(--secondary-bg);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px var(--shadow-color);
+      z-index: 10
+    }
+    .menu-button {
+      background: none; border: none; color: var(--header-title-color);
+      font-size: 1.5rem; cursor: pointer; margin-right: 15px;
+    }
+    .header-title { flex-grow: 1; font-size: 1.8rem; color: var(--header-title-color); font-family: var(--font-lobster); }
+    /* NEW: Header action buttons style */
+    .header-action-btn { 
+      background: none; 
+      border: none; 
+      color: var(--primary-text); 
+      font-size: 1.3rem; 
+      cursor: pointer; 
+      opacity: 0.8; 
+      transition: opacity 0.2s, color 0.2s; 
+    }
+    .header-action-btn:hover { opacity: 1; }
+    
+    /* YAHAN BADLAAV KIYA GAYA HAI: Notes area keval isi area mein scroll hoga */
+    #main-content { 
+        grid-area: main; 
+        overflow-y: auto; 
+        padding: 20px 20px 80px 20px; /* Neeche ke footer ko clear karne ke liye padding badhaya */
+    }
+
+    .bottom-nav { grid-area: footer; display: flex; justify-content: space-around; background-color: var(--secondary-bg); backdrop-filter: blur(10px); box-shadow: 0 -2px 10px var(--shadow-color); z-index: 10; 
+    position:fixed;
+    bottom:0px;
+    width:100%;
+    }
+    .add-note-button { position: fixed; bottom: 80px; right: 25px; width: 60px; height: 60px; border-radius: 50%; background-color: var(--accent-color); color: var(--header-title-color); border: none; font-size: 1.9rem; box-shadow: 0 5px 15px var(--shadow-color); cursor: pointer; z-index: 100; transition: transform 0.2s ease, background-color 0.2s;
+    display:flex;
+        padding:15px 13px 13px 16px;
+    }
+    .add-note-button:hover { transform: scale(1.1); }
+    
+    .category-list { list-style: none; }
+    .category-item { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 5px; cursor: pointer; opacity: 0.7; transition: all 0.2s; border-left: 4px solid transparent; }
+    .category-item:hover, .category-item.active { opacity: 1; background-color: rgba(0,0,0,0.2); border-left-color: var(--accent-color); }
+    .category-item i { font-size: 1.5rem; margin-bottom: 5px; }
+    .category-item span { font-size: 0.7rem; text-align: center; }
+
+    /* --- NOTE CARD --- */
+    .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .note-card { background-color: var(--card-bg); backdrop-filter: blur(5px); border-radius: 12px; padding: 15px; box-shadow: 0 4px 12px var(--shadow-color); display: flex; flex-direction: column; min-height: 150px; transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease; border: 1px solid rgba(255, 255, 255, 0.1); color: var(--primary-text); cursor: pointer; }
+    .note-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px var(--shadow-color); }
+    /* NEW: Selected Note Style */
+    .note-card.selected { 
+      border: 3px solid var(--accent-color) !important; 
+      box-shadow: 0 4px 15px var(--accent-color);
+      transform: translateY(-5px);
+    }
+    .note-topic { font-size: 1.2rem; font-weight: 700; color: var(--primary-text); margin-bottom: 10px; word-break: break-word; }
+    .note-content { flex-grow: 1; font-size: 1rem; line-height: 1.5; word-wrap: break-word; overflow: hidden; }
+
+/* Preserve user-applied colors, highlights, underline */
+.note-content span,
+.note-content b,
+.note-content i,
+.note-content u {
+  color: inherit;
+  background-color: transparent;
+  text-decoration: inherit;
+}
+
+.note-content [style*="color"],
+.note-content [style*="background-color"],
+.note-content [style*="text-decoration"] {
+  all: unset;
+  display: inline;
+}
+
+
+    .note-content img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
+    .note-footer { margin-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 10px; }
+    .note-meta { font-size: 0.75rem; opacity: 0.9; }
+    .note-meta .category { font-weight: bold; color: var(--accent-color); }
+    .note-copyright { font-size: 0.7rem; text-align: center; margin-top: 8px; opacity: 0.7; }
+    .note-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+    .action-btn { background: none; border: none; color: var(--primary-text); font-size: 1.1rem; cursor: pointer; opacity: 0.8; transition: opacity 0.2s, color 0.2s; }
+    .action-btn:hover { opacity: 1; }
+    .delete-btn:hover { color: #e74c3c; }
+    .restore-btn:hover { color: #2ecc71; }
+    
+    .nav-button { background: none; border: none; color: var(--primary-text); padding: 10px; flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; opacity: 0.7; transition: all 0.2s; }
+    .nav-button.active { opacity: 1; color: var(--accent-color); transform: translateY(-3px); }
+    .nav-button i { font-size: 1.4rem; }
+    .nav-button span { font-size: 0.7rem; }
+    
+    /* --- MODAL STYLES --- */
+    .modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-bg); z-index: 200; transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; 
+        overflow-y: auto;
+    }
+    .modal-container.active { transform: translateX(0); }
+    .modal-header { display: flex; align-items: center; padding: 15px; background-color: var(--secondary-bg); backdrop-filter: blur(10px); box-shadow: 0 2px 10px var(--shadow-color); }
+    .back-button { background: none; border: none; color: var(--primary-text); font-size: 1.5rem; cursor: pointer; margin-right: 20px; }
+    .modal-title { font-size: 1.5rem; flex-grow: 1; }
+    .save-note-button { background-color: var(--accent-color); color: var(--header-title-color); border: none; padding: 10px 20px; border-radius: 20px; font-size: 1rem; font-weight: bold; cursor: pointer; 
+        box-shadow:0px 5px 5px rgba(0,0,0,0.3);
+    }
+
+    /* --- NOTE EDITOR & TOOLBAR --- */
+.note-editor-container { padding: 15px; display: flex;
+
+flex-direction: column; /* Fixed height hata kar minimum height set kiya: */ min-height: calc(100% - 70px); height: auto; 
+overflow-y: auto;
+/* 'height: auto' se container ko content ke hisaab se expand hone ki ijazat milti
+
+hai */ }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; background-color: var(--secondary-bg); border-radius: 8px; margin-bottom: 15px; }
+    .tool-btn, .font-family-selector { background: var(--card-bg); border: none; color: var(--primary-text); height: 40px; border-radius: 8px; font-size: 1rem; cursor: pointer; padding: 0 10px; }
+    .tool-btn { width: 40px; padding: 0; }
+    .font-family-selector { -webkit-appearance: none; appearance: none; }
+    .tool-btn-color-picker { position: relative; overflow: hidden; }
+    .color-picker-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    .note-topic-input { width: 100%; padding: 15px; font-size: 1.5rem; font-weight: bold; border: none; background: transparent; color: var(--primary-text); border-bottom: 2px solid var(--card-bg); margin-bottom: 15px; }
+    .note-topic-input:focus { outline: none; border-bottom-color: var(--accent-color); }
+.note-content-input { width: 100%; /* 'flex-grow: 1'
+hataya taaki height
+content ke hisaab se
+set ho */ flex-grow:
+0; padding: 15px;
+font-size: 1.1rem;
+line-height: 1.6;
+border: none;
+background:
+transparent; color:
+var(--primary-text);
+outline: none; /*
+Minimum height set
+kiya taaki shuru
+mein 5-6 lines
+dikhein */
+height:auto!important;
+min-height: 150px;
+overflow-y:
+visible; /*
+Scrollbar hataya, ab pura modal scroll hoga */ }
+    .note-content-input[contenteditable=true]:empty:before { content: attr(data-placeholder); color: grey; }
+    .note-content-input img.selected-img { box-shadow: 0 0 0 3px var(--accent-color); border-radius: 8px; }
+
+    #image-toolbar { position: absolute; display: none; gap: 5px; background: var(--secondary-bg); padding: 8px; border-radius: 10px; box-shadow: 0 4px 15px var(--shadow-color); z-index: 999; backdrop-filter: blur(5px); }
+    #image-toolbar button { background: var(--card-bg); border: none; color: var(--primary-text); width: 35px; height: 35px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; }
+    #image-toolbar input[type=range] { width: 80px; }
+    
+    /* --- SETTINGS --- */
+    .settings-content { padding: 20px; overflow-y: auto; }
+    .setting-item { margin-bottom: 25px; display: flex; flex-direction: column; }
+    .setting-item label { font-size: 1rem; margin-bottom: 10px; font-weight: 600; }
+    .setting-item input[type="text"], .setting-item input[type="password"] { padding: 12px; border: 1px solid var(--card-bg); background-color: var(--primary-bg); color: var(--primary-text); border-radius: 8px; font-size: 1rem; }
+    .setting-item button { margin-top: 10px; padding: 12px; background-color: var(--accent-color); color: var(--header-title-color); border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; }
+    .theme-options { display: flex; gap: 15px; flex-wrap: wrap; }
+    .theme-preview { width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: border-color 0.2s, transform 0.2s; }
+    .theme-preview:hover { transform: scale(1.1); }
+    .theme-preview.selected { border-color: var(--accent-color); }
+    .theme-preview[data-theme="default"] { background: linear-gradient(135deg, #e0c3fc, #8ec5fc); }
+    .theme-preview[data-theme="starlight"] { background: linear-gradient(135deg, #0f2027, #2c5364); }
+    .theme-preview[data-theme="sunset"] { background: linear-gradient(135deg, #ff7e5f, #feb47b); }
+    .theme-preview[data-theme="forest"] { background: linear-gradient(135deg, #233329, #637868); }
+    .theme-preview[data-theme="ocean"] { background: linear-gradient(135deg, #13547a, #80d0c7); }
+    .theme-preview[data-theme="rose"] { background: linear-gradient(135deg, #870000, #190a05); }
+
+    .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; }
+    .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+    input:checked + .slider { background-color: var(--accent-color); }
+    input:checked + .slider:before { transform: translateX(26px); }
+    .slider.round { border-radius: 34px; }
+    .slider.round:before { border-radius: 50%; }
+
+    /* --- UTILITIES --- */
+    .welcome-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); background:none; color: var(--header-title-color); padding: 25px 40px; border-radius: 15px; font-size: 3rem; z-index: 1000; opacity: 0; visibility: hidden; transition: all 0.4s ease;
+    backdrop-filter:blur(30px);
+    -webkit-backdrop-filter:blur(30px);
+    }
+    .welcome-popup.show { opacity: 1; transform: translate(-50%, -50%) scale(1); visibility: visible; }
+    #toast-notification { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background-color: var(--accent-color); color: var(--header-title-color); padding: 12px 25px; border-radius: 25px; z-index: 1001; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s, transform 0.3s; }
+    #toast-notification.show { opacity: 1; visibility: visible; transform: translate(-50%, -10px); }
+    
+    /* NEW/UPDATED: Share Menu Styles */
+    .share-menu { 
+        position: fixed; 
+        background: var(--secondary-bg); 
+        border: 1px solid var(--card-bg); 
+        border-radius: 8px; 
+        padding: 5px; 
+        z-index: 300; 
+        box-shadow: 0 4px 15px var(--shadow-color);
+        backdrop-filter: blur(5px);
+        min-width: 180px;
+    }
+    .share-option { 
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px; 
+        cursor: pointer; 
+        border-radius: 6px;
+        font-size: 0.95rem;
+    }
+    .share-option:hover { background-color: var(--card-bg); }
+    
+    .font-family-selector {
+    /* 1. बेस स्टाइल और रिसेट */
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    cursor: pointer;
+
+    /* 2. मॉडर्न साइज़िंग (48px टच टारगेट) */
+    height: 48px;
+    padding: 0 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 48px;
+
+    /* 3. रंग और गोलाई */
+    background: var(--card-bg);
+    color: var(--primary-text);
+    border-radius: 12px;
+
+    /* 4. मॉडर्न एलिवेशन (छाया) और ट्रांज़िशन */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease-in-out;
+}
+
+.font-family-selector:hover,
+.font-family-selector:focus {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+/* यदि यह एक <select> टैग है और आप डिफ़ॉल्ट तीर हटाना चाहते हैं */
+.font-family-selector {
+    background-image: none;
+}
+#welcomeMessage{
+    font-family:'times';
+}
+
+/* --- DIALOG MODAL (for Password) --- */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  visibility: hidden;
+}
+.dialog-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+.dialog-box {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px var(--shadow-color);
+  width: 90%;
+  max-width: 400px;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+.dialog-overlay.active .dialog-box {
+  transform: scale(1);
+}
+.dialog-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary-text);
+  margin-bottom: 10px;
+}
+.dialog-box p {
+  font-size: 1rem;
+  margin-bottom: 20px;
+  opacity: 0.9;
+}
+.dialog-box input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--secondary-bg);
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+.dialog-box input[type="password"]:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px var(--accent-color);
+}
+.dialog-error {
+  color: #e74c3c;
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-height: 1.2em;
+  margin-bottom: 15px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.dialog-actions button {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.dialog-btn-primary {
+  background-color: var(--accent-color);
+  color: var(--header-title-color);
+}
+.dialog-btn-primary:hover {
+  filter: brightness(1.1);
+}
+.dialog-btn-secondary {
+  background-color: var(--secondary-bg);
+  color: var(--primary-text);
+}
+.dialog-btn-secondary:hover {
+  filter: brightness(0.9);
+}
+
+/* Shake animation for error */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+.dialog-box.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+  </style>
+</head>
+
+<body>
+
+  <button id="open-chat-btn"><i class="fa-solid fa-robot fa-beat" style="color: #000000;"></i></button>
+
+  <div id="chat-modal">
+    
+    <button id="close-chat-btn" class="material-symbols-rounded">arrow_back</button>
+
+    <div class="container">
+      <header class="app-header">
+        <h1 class="heading">Hello, there</h1>
+        <h4 class="sub-heading">How can I help you today?</h4>
+      </header>
+      
+      <ul class="suggestions">
+        <li class="suggestions-item">
+          <p class="text">Design a home office setup for remote work under $500.</p>
+          <span class="icon material-symbols-rounded">draw</span>
+        </li>
+        <li class="suggestions-item">
+          <p class="text">How can I level up my web development expertise in 2025?</p>
+          <span class="icon material-symbols-rounded">lightbulb</span>
+        </li>
+        <li class="suggestions-item">
+          <p class="text">Suggest some useful tools for debugging JavaScript code.</p>
+          <span class="icon material-symbols-rounded">explore</span>
+        </li>
+        <li class="suggestions-item">
+          <p class="text">Create a React JS component for the simple todo list app.</p>
+          <span class="icon material-symbols-rounded">code_blocks</span>
+        </li>
+      </ul>
+      
+      <div class="chats-container"></div>
+      
+      <div class="prompt-container">
+        <div class="prompt-wrapper">
+          <form action="#" class="prompt-form">
+            <input type="text" placeholder="Ask chatify..." class="prompt-input" required />
+            <div class="prompt-actions">
+              <div class="file-upload-wrapper">
+                <img src="#" class="file-preview" />
+                <input id="file-input" type="file" accept="image/*, .pdf, .txt, .csv" hidden />
+                <button type="button" class="file-icon material-symbols-rounded">description</button>
+                <button id="cancel-file-btn" type="button" class="material-symbols-rounded">close</button>
+                <button id="add-file-btn" type="button" class="material-symbols-rounded">attach_file</button>
+              </div>
+              
+              <button id="stop-response-btn" type="button" class="material-symbols-rounded">stop_circle</button>
+              <button id="send-prompt-btn" class="material-symbols-rounded">arrow_upward</button>
+            </div>
+          </form>
+          
+          <button id="theme-toggle-btn" class="material-symbols-rounded">light_mode</button>
+          <button id="delete-chats-btn" class="material-symbols-rounded">delete</button>
+        </div>
+        
+    
+      </div>
+    </div> </div> 
+    <body>
+  <div class="welcome-popup" id="welcomePopup"><span id="welcomeMessage"></span></div>
+
+  <div class="app-container sidebar-collapsed" id="appContainer">
+    <header id="main-header">
+      <button class="menu-button" id="menuButton"><i class="fas fa-bars"></i></button>
+      <h1 class="header-title" id="mainHeaderTitle">NoteliFy</h1>
+      <div id="homeActions" style="display: none; gap: 10px; margin-left: auto;">
+          <button class="action-btn header-action-btn" id="editNoteHeaderBtn" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+          <button class="action-btn header-action-btn" id="shareNoteHeaderBtn" title="Share"><i class="fas fa-share-alt"></i></button>
+          <button class="action-btn header-action-btn" id="deleteNoteHeaderBtn" title="Delete"><i class="fas fa-trash"></i></button>
+      </div>
+    </header>
+  <button id="buronclick="captureNoteAsImage('noteArea')">Download Note as Image</button>
+
+    <nav class="sidebar" id="sidebar">
+      <ul class="category-list">
+        <li class="category-item active" data-category="all"><i class="fas fa-inbox"></i><span>All Notes</span></li>
+        <li class="category-item" data-category="Family"><i class="fas fa-users"></i><span>Family</span></li>
+        <li class="category-item" data-category="Friends"><i class="fas fa-user-friends"></i><span>Friends</span></li>
+        <li class="category-item" data-category="GF/BF"><i class="fas fa-heart"></i><span>GF/BF</span></li>
+        <li class="category-item" data-category="Office"><i class="fas fa-briefcase"></i><span>Office</span></li>
+        <li class="category-item" data-category="Institute"><i class="fas fa-university"></i><span>Institute</span></li>
+        <li class="category-item" data-category="Hospital"><i class="fas fa-hospital"></i><span>Hospital</span></li>
+        <li class="category-item" data-category="Others"><i class="fas fa-ellipsis-h"></i><span>Others</span></li>
+      </ul>
+    </nav>
+    
+    <main id="main-content"><div id="notes-grid" class="notes-grid"></div></main>
+    
+    <button class="add-note-button" id="addNoteButton"><i class="fas fa-plus"></i></button>
+    
+    <nav class="bottom-nav">
+      <button class="nav-button active" data-page="home"><i class="fas fa-home"></i><span>Home</span></button>
+      <button class="nav-button" data-page="recyclebin"><i class="fas fa-trash"></i><span>Bin</span></button>
+      <button class="nav-button" data-page="settings"><i class="fas fa-cog"></i><span>Settings</span></button>
+    </nav>
+  </div>
+
+  <div class="modal-container" id="noteModal">
+    <div class="modal-content">
+      <header class="modal-header">
+        <button class="back-button" data-close-modal="noteModal"><i class="fas fa-arrow-left"></i></button>
+        <h2 class="modal-title">Create Note</h2>
+        <button class="save-note-button" id="saveNoteButton">Place </button>
+      </header>
+      
+      <div class="note-editor-container">
+        <div class="toolbar" id="editorToolbar">
+            <button class="tool-btn" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+            <button class="tool-btn" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+            <button class="tool-btn" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+            <button class="tool-btn" data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
+            <button class="tool-btn" data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
+            <button class="tool-btn" data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
+            <button class="tool-btn" data-command="insertUnorderedList" title="Bullet Points"><i class="fas fa-list-ul"></i></button>
+            <button class="tool-btn" data-command="insertText" data-value="★&nbsp;" title="Star Bullet">★</button>
+            <button class="tool-btn" data-command="insertText" data-value="→&nbsp;" title="Arrow Bullet">→</button>
+          <button class="tool-btn" data-command="insertHTML" data-value='<span style="font-family: inherit;"><i class="fas fa-bomb"></i>&nbsp;</span>' title="Bomb"><i class="fas fa-bomb"></i></button>
+
+            <button class="tool-btn tool-btn-color-picker" title="Font Color">
+                <i class="fas fa-palette"></i>
+                <input type="color" id="fontColorPicker" class="color-picker-input">
+            </button>
+            <button class="tool-btn tool-btn-color-picker" title="Highlight Color">
+                <i class="fas fa-highlighter"></i>
+                <input type="color" id="highlightColorPicker" class="color-picker-input">
+            </button>
+<select class="font-family-selector" id="fontFamilySelector" title="Font Family">
+    <option value="Times New Roman" style="font-family: 'Times New Roman', serif;">Times New Roman</option>
+    <option value="Times" style="font-family: 'Times', serif;">Times</option>
+    <option value="Monospace" style="font-family: monospace;">Monospace</option>
+    <option value="Cursive" style="font-family: cursive;">Cursive</option>
+    <option value="Calibri" style="font-family: 'Calibri', sans-serif;">Calibri</option>
+</select>
+
+            <button class="tool-btn" id="uploadImageBtn" title="Upload Image"><i class="fas fa-image"></i></button>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;"/>
+        </div>
+        <input type="text" id="note-topic-input" class="note-topic-input" placeholder="Your Topic...">
+        <div id="note-content-input" class="note-content-input" contenteditable="true" data-placeholder="Write your note here..."></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="image-toolbar">
+    <button data-action="align" data-value="left" title="Align Left"><i class="fas fa-align-left"></i></button>
+    <button data-action="align" data-value="center" title="Align Center"><i class="fas fa-align-center"></i></button>
+    <button data-action="align" data-value="right" title="Align Right"><i class="fas fa-align-right"></i></button>
+    <button data-action="resize" data-value="50%" title="Small Size"><i class="fas fa-compress-arrows-alt"></i> S</button>
+    <button data-action="resize" data-value="100%" title="Large Size"><i class="fas fa-expand-arrows-alt"></i> L</button>
+    <button data-action="rotate" data-value="-90" title="Rotate Left"><i class="fas fa-undo"></i></button>
+    <button data-action="rotate" data-value="90" title="Rotate Right"><i class="fas fa-redo"></i></button>
+  </div>
+  
+  <div class="modal-container" id="settingsModal">
+      <div class="modal-content">
+        <header class="modal-header">
+            <button class="back-button" data-close-modal="settingsModal"><i class="fas fa-arrow-left"></i></button>
+            <h2 class="modal-title">Settings</h2>
+        </header>
+        <div class="settings-content">
+            <div class="setting-item"><label for="usernameInput">Username</label><input type="text" id="usernameInput" placeholder="Enter your name"><button id="saveUsernameBtn">Save</button></div>
+            
+            <div class="setting-item">
+                <label for="passwordInput">GF/BF Category Password</label>
+                <p id="passwordStatus" style="font-size: 0.85rem; color: var(--accent-color); margin-bottom: 5px;"></p>
+                <input type="password" id="oldPasswordInput" placeholder="Enter Old Password" style="margin-bottom: 10px; display: none;">
+                <input type="password" id="passwordInput" placeholder="Set a New Password">
+                <button id="savePasswordBtn">Change Password</button>
+            </div>
+            <div class="setting-item">
+                <label>App Theme</label>
+                <div class="theme-options" id="themeOptions">
+                    <div class="theme-preview" title="Daylight (Default)" data-theme="default"></div>
+                    <div class="theme-preview" title="Starlight" data-theme="starlight"></div>
+                    <div class="theme-preview" title="Sunset" data-theme="sunset"></div>
+                    <div class="theme-preview" title="Forest" data-theme="forest"></div>
+                    <div class="theme-preview" title="Ocean" data-theme="ocean"></div>
+                    <div class="theme-preview" title="Rose" data-theme="rose"></div>
+                </div>
+            </div>
+            <div class="setting-item">
+                <label>Enable Notifications</label>
+                <label class="switch"><input type="checkbox" id="notificationToggle"><span class="slider round"></span></label>
+            </div>
+        </div>
+      </div>
+  </div>
+
+  <div class="modal-container" id="recycleBinModal">
+    <div class="modal-content">
+      <header class="modal-header">
+          <button class="back-button" data-close-modal="recycleBinModal"><i class="fas fa-arrow-left"></i></button>
+          <h2 class="modal-title" id="recycleHeaderTitle">Recycle Bin</h2>
+          <div id="recycleBinActions" style="display: none; gap: 10px; margin-left: auto;">
+              <button class="action-btn header-action-btn" id="restoreNoteHeaderBtn" title="Restore"><i class="fas fa-undo"></i></button>
+              <button class="action-btn header-action-btn" id="permanentDeleteHeaderBtn" title="Delete Permanently"><i class="fas fa-trash-alt"></i></button>
+          </div>
+      </header>
+      <div id="recycle-bin-grid" class="notes-grid"></div>
+    </div>
+  </div>
+
+  <div id="toast-notification" class="toast-notification"></div>
+
+  <div class="dialog-overlay" id="passwordPromptOverlay" style="display: none;">
+    <div class="dialog-box" id="passwordPromptBox">
+      <h3 class="dialog-title">Password Required</h3>
+      <p>Please enter the password for this category.</p>
+      <input type="password" id="passwordPromptInput" placeholder="Password...">
+      <div class="dialog-error" id="passwordPromptError"></div>
+      <div class="dialog-actions">
+        <button class="dialog-btn-secondary" id="passwordPromptCancel">Cancel</button>
+        <button class="dialog-btn-primary" id="passwordPromptSubmit">Unlock</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="share-menu" id="shareMenu" style="display: none;">
+      <div class="share-option" id="shareAsTextOption"><i class="fas fa-file-alt"></i> Share as Text</div>
+      <div class="share-option" id="shareAsImageOption"><i class="fas fa-image"></i> Share as Image</div>
+      <div class="share-option" id="downloadAsTextOption"><i class="fas fa-download"></i> Download as Text</div>
+  </div>
+
+
+  <script>
+    // --- MODIFIED: Selecting new elements ---
+    const chatModal = document.querySelector("#chat-modal");
+    const openChatBtn = document.querySelector("#open-chat-btn");
+    const closeChatBtn = document.querySelector("#close-chat-btn");
+    
+    // Original element selections
+    const container = document.querySelector(".container");
+    const chatsContainer = document.querySelector(".chats-container");
+    const promptForm = document.querySelector(".prompt-form");
+    const promptInput = promptForm.querySelector(".prompt-input");
+    const fileInput = promptForm.querySelector("#file-input");
+    const fileUploadWrapper = promptForm.querySelector(".file-upload-wrapper");
+    const themeToggleBtn = document.querySelector("#theme-toggle-btn");
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- DOM ELEMENTS ---
+      const appContainer = document.getElementById('appContainer');
+      const menuButton = document.getElementById('menuButton');
+      const allModals = document.querySelectorAll('.modal-container');
+      const noteModal = document.getElementById('noteModal');
+      const settingsModal = document.getElementById('settingsModal');
+      const recycleBinModal = document.getElementById('recycleBinModal');
+      const addNoteButton = document.getElementById('addNoteButton');
+      const saveNoteButton = document.getElementById('saveNoteButton');
+      const noteTopicInput = document.getElementById('note-topic-input');
+      const noteContentInput = document.getElementById('note-content-input');
+      const notesGrid = document.getElementById('notes-grid');
+      const recycleBinGrid = document.getElementById('recycle-bin-grid');
+      const navButtons = document.querySelectorAll('.nav-button');
+      const categoryItems = document.querySelectorAll('.category-item');
+      const welcomePopup = document.getElementById('welcomePopup');
+      const welcomeMessage = document.getElementById('welcomeMessage');
+      const toast = document.getElementById('toast-notification');
+      
+      // Custom Password UI Elements
+      const passwordPromptOverlay = document.getElementById('passwordPromptOverlay');
+      const passwordPromptBox = document.getElementById('passwordPromptBox');
+      const passwordPromptInput = document.getElementById('passwordPromptInput');
+      const passwordPromptSubmit = document.getElementById('passwordPromptSubmit');
+      const passwordPromptCancel = document.getElementById('passwordPromptCancel');
+      const passwordPromptError = document.getElementById('passwordPromptError');
+      
+      const usernameInput = document.getElementById('usernameInput');
+      const saveUsernameBtn = document.getElementById('saveUsernameBtn');
+      
+      // ****** YAHAN JS MEIN BADLAAV KIYA GAYA HAI (NEW ELEMENTS) ******
+      const oldPasswordInput = document.getElementById('oldPasswordInput');
+      const passwordStatus = document.getElementById('passwordStatus');
+      // *************************************************************
+      
+      const passwordInput = document.getElementById('passwordInput');
+      const savePasswordBtn = document.getElementById('savePasswordBtn');
+      const themeOptions = document.getElementById('themeOptions');
+      const notificationToggle = document.getElementById('notificationToggle');
+      
+      const editorToolbar = document.getElementById('editorToolbar');
+      const imageInput = document.getElementById('imageInput');
+      const uploadImageBtn = document.getElementById('uploadImageBtn');
+      const fontFamilySelector = document.getElementById('fontFamilySelector');
+      const imageToolbar = document.getElementById('image-toolbar');
+      const mainHeader = document.getElementById('main-header'); // Header element
+      
+      // --- STATE MANAGEMENT ---
+      let notes = JSON.parse(localStorage.getItem('notes')) || [];
+      let deletedNotes = JSON.parse(localStorage.getItem('deletedNotes')) || [];
+      let currentEditId = null;
+      let currentFilter = 'all';
+      let appSettings = JSON.parse(localStorage.getItem('appSettings')) || {
+        username: '',
+        password: null,
+        notifications: true,
+        appTheme: 'default'
+      };
+      let selectedImage = null;
+      let currentImageRotation = 0;
+      let onPasswordSuccessCallback = null;
+      let isGfBfUnlocked = false;
+      
+      // --- HEADER BUTTONS STATE ---
+      let selectedNoteIdForHeader = null; // ID of the currently selected note for header actions
+
+    // API Setup
+    const API_KEY = "AIzaSyCLfaDW7x_fw3o9aGSeRoQkpiX7OYQlZSs";
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+
+    let controller, typingInterval;
+    const chatHistory = [];
+    const userData = { message: "", file: {} };
+
+    // Set initial theme from local storage
+    const isLightTheme = localStorage.getItem("themeColor") === "light_mode";
+    document.body.classList.toggle("light-theme", isLightTheme);
+    themeToggleBtn.textContent = isLightTheme ? "dark_mode" : "light_mode";
+
+    // Function to create message elements
+    const createMessageElement = (content, ...classes) => {
+      const div = document.createElement("div");
+      div.classList.add("message", ...classes);
+      div.innerHTML = content;
+      return div;
+    };
+
+    // Scroll to the bottom of the container
+    const scrollToBottom = () => container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+
+    // Simulate typing effect for bot responses
+    const typingEffect = (text, textElement, botMsgDiv) => {
+      textElement.textContent = "";
+      const words = text.split(" ");
+      let wordIndex = 0;
+      
+      // Set an interval to type each word
+      typingInterval = setInterval(() => {
+        if (wordIndex < words.length) {
+          textElement.textContent += (wordIndex === 0 ? "" : " ") + words[wordIndex++];
+          scrollToBottom();
+        } else {
+          clearInterval(typingInterval);
+          botMsgDiv.classList.remove("loading");
+          document.body.classList.remove("bot-responding");
+        }
+      }, 40); // 40 ms delay
+    };
+
+    // Make the API call and generate the bot's response
+    const generateResponse = async (botMsgDiv) => {
+      const textElement = botMsgDiv.querySelector(".message-text");
+      controller = new AbortController();
+      
+      // Add user message and file data to the chat history
+      chatHistory.push({
+        role: "user",
+        parts: [{ text: userData.message }, ...(userData.file.data ? [{ inline_data: (({ fileName, isImage, ...rest }) => rest)(userData.file) }] : [])],
+      });
+      
+      try {
+        // Send the chat history to the API to get a response
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: chatHistory }),
+          signal: controller.signal,
+        });
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error.message);
+        
+        // Process the response text and display with typing effect
+        const responseText = data.candidates[0].content.parts[0].text.replace(/\*\*([^*]+)\*\*/g, "$1").trim();
+        typingEffect(responseText, textElement, botMsgDiv);
+        
+        chatHistory.push({ role: "model", parts: [{ text: responseText }] });
+      } catch (error) {
+        textElement.textContent = error.name === "AbortError" ? "Response generation stopped." : error.message;
+        textElement.style.color = "#d62939";
+        botMsgDiv.classList.remove("loading");
+        document.body.classList.remove("bot-responding");
+        scrollToBottom();
+      } finally {
+        userData.file = {};
+      }
+    };
+
+    // Handle the form submission
+    const handleFormSubmit = (e) => {
+      e.preventDefault();
+      const userMessage = promptInput.value.trim();
+      if (!userMessage || document.body.classList.contains("bot-responding")) return;
+      
+      userData.message = userMessage;
+      promptInput.value = "";
+      document.body.classList.add("chats-active", "bot-responding");
+      fileUploadWrapper.classList.remove("file-attached", "img-attached", "active");
+      
+      // Generate user message HTML with optional file attachment
+      const userMsgHTML = `
+        <p class="message-text"></p>
+        ${userData.file.data ? (userData.file.isImage ? `<img src="data:${userData.file.mime_type};base64,${userData.file.data}" class="img-attachment" />` : `<p class="file-attachment"><span class="material-symbols-rounded">description</span>${userData.file.fileName}</p>`) : ""}
+      `;
+      
+      const userMsgDiv = createMessageElement(userMsgHTML, "user-message");
+      userMsgDiv.querySelector(".message-text").textContent = userData.message;
+      chatsContainer.appendChild(userMsgDiv);
+      scrollToBottom();
+      
+      setTimeout(() => {
+        // Generate bot message HTML and add in the chat container
+        const botMsgHTML = `<img class="avatar" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvEafeLkkjqOhlWJuKkGBOUfznb9doVAsY6Q&usqp=CAU" /> <p class="message-text">Just a sec...</p>`;
+        const botMsgDiv = createMessageElement(botMsgHTML, "bot-message", "loading");
+        chatsContainer.appendChild(botMsgDiv);
+        scrollToBottom();
+        generateResponse(botMsgDiv);
+      }, 600); // 600 ms delay
+    };
+
+    // Handle file input change (file upload)
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      
+      const isImage = file.type.startsWith("image/");
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = (e) => {
+        fileInput.value = "";
+        const base64String = e.target.result.split(",")[1];
+        fileUploadWrapper.querySelector(".file-preview").src = e.target.result;
+        fileUploadWrapper.classList.add("active", isImage ? "img-attached" : "file-attached");
+        
+        // Store file data in userData obj
+        userData.file = { fileName: file.name, data: base64String, mime_type: file.type, isImage };
+      };
+    });
+
+    // Cancel file upload
+    document.querySelector("#cancel-file-btn").addEventListener("click", () => {
+      userData.file = {};
+      fileUploadWrapper.classList.remove("file-attached", "img-attached", "active");
+    });
+
+    // Stop Bot Response
+    document.querySelector("#stop-response-btn").addEventListener("click", () => {
+      controller?.abort();
+      userData.file = {};
+      clearInterval(typingInterval);
+      chatsContainer.querySelector(".bot-message.loading").classList.remove("loading");
+      document.body.classList.remove("bot-responding");
+    });
+
+    // Toggle dark/light theme
+    themeToggleBtn.addEventListener("click", () => {
+      const isLightTheme = document.body.classList.toggle("light-theme");
+      localStorage.setItem("themeColor", isLightTheme ? "light_mode" : "dark_mode");
+      themeToggleBtn.textContent = isLightTheme ? "dark_mode" : "light_mode";
+    });
+
+    // Delete all chats
+    document.querySelector("#delete-chats-btn").addEventListener("click", () => {
+      chatHistory.length = 0;
+      chatsContainer.innerHTML = "";
+      document.body.classList.remove("chats-active", "bot-responding");
+    });
+
+    // Handle suggestions click
+    document.querySelectorAll(".suggestions-item").forEach((suggestion) => {
+      suggestion.addEventListener("click", () => {
+        promptInput.value = suggestion.querySelector(".text").textContent;
+        promptForm.dispatchEvent(new Event("submit"));
+      });
+    });
+
+    // Show/hide controls for mobile on prompt input focus
+    document.addEventListener("click", ({ target }) => {
+      const wrapper = document.querySelector(".prompt-wrapper");
+      const shouldHide = target.classList.contains("prompt-input") || (wrapper.classList.contains("hide-controls") && (target.id === "add-file-btn" || target.id === "stop-response-btn"));
+      wrapper.classList.toggle("hide-controls", shouldHide);
+    });
+
+    // Add event listeners for form submission and file input click
+    promptForm.addEventListener("submit", handleFormSubmit);
+    promptForm.querySelector("#add-file-btn").addEventListener("click", () => fileInput.click());
+
+    // --- NEW: Event listeners for modal ---
+    
+    // Open chat modal
+    openChatBtn.addEventListener("click", () => {
+      chatModal.style.display = "block";
+      openChatBtn.style.display = "none";
+      scrollToBottom(); // Scroll to bottom when opening
+    });
+
+    // Close chat modal
+    closeChatBtn.addEventListener("click", () => {
+      chatModal.style.display = "none";
+      openChatBtn.style.display = "block";
+    });
+    const init = () => {
+        applyAppTheme(appSettings.appTheme);
+        renderNotes();
+        loadSettings();
+        showWelcomeMessage();
+        addEventListeners();
+        setupHeaderActions(); // New call to setup header buttons
+    };
+
+    const applyAppTheme = (theme) => {
+        document.body.dataset.appTheme = theme;
+        appSettings.appTheme = theme;
+        localStorage.setItem('appSettings', JSON.stringify(appSettings));
+        document.querySelectorAll('.theme-preview.selected').forEach(el => el.classList.remove('selected'));
+        const activeThemePreview = document.querySelector(`.theme-preview[data-theme="${theme}"]`);
+        if (activeThemePreview) activeThemePreview.classList.add('selected');
+    };
+    const showWelcomeMessage = () => {
+        if (appSettings.username) {
+            welcomeMessage.textContent = `Welcome, ${appSettings.username}`;
+            welcomePopup.classList.add('show');
+            setTimeout(() => welcomePopup.classList.remove('show'), 2000);
+        }
+    };
+    const showToast = (message) => {
+        if (!appSettings.notifications) return;
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    };
+
+    const openModal = (modal) => modal.classList.add('active');
+    const closeModal = (modal) => {
+      modal.classList.remove('active');
+      hideImageToolbar();
+    };
+    
+    // Custom Password UI Functions
+    const openPasswordDialog = () => {
+        passwordPromptInput.value = '';
+        passwordPromptError.textContent = '';
+        passwordPromptBox.classList.remove('shake');
+        passwordPromptOverlay.style.display = 'flex';
+        setTimeout(() => passwordPromptOverlay.classList.add('active'), 10); 
+    };
+
+    const closePasswordDialog = () => {
+        passwordPromptOverlay.classList.remove('active');
+        setTimeout(() => passwordPromptOverlay.style.display = 'none', 300); 
+    };
+
+    const saveNotesToStorage = () => {
+        localStorage.setItem('notes', JSON.stringify(notes));
+        localStorage.setItem('deletedNotes', JSON.stringify(deletedNotes));
+    };
+    
+    // --- HEADER ACTIONS: New function to manage header buttons visibility and binding ---
+    const updateHeaderActions = (noteId) => {
+        selectedNoteIdForHeader = noteId;
+        
+        // Remove existing header buttons (except menu/title)
+        document.querySelectorAll('.header-action-btn').forEach(btn => btn.remove());
+        
+        if (noteId) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'menu-button header-action-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.title = 'Delete Note';
+            deleteBtn.addEventListener('click', () => {
+                handleDeleteNote(selectedNoteIdForHeader);
+                updateHeaderActions(null); // Hide buttons after action
+            });
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'menu-button header-action-btn';
+            editBtn.innerHTML = '<i class="fas fa-pencil-alt"></i>';
+            editBtn.title = 'Edit Note';
+            editBtn.addEventListener('click', () => {
+                handleEditNote(selectedNoteIdForHeader);
+                updateHeaderActions(null); // Hide buttons after action
+            });
+            
+            const shareBtn = document.createElement('button');
+            shareBtn.className = 'menu-button header-action-btn';
+            shareBtn.innerHTML = '<i class="fas fa-share-alt"></i>';
+            shareBtn.title = 'Share Note';
+            shareBtn.id = 'headerShareBtn';
+            shareBtn.addEventListener('click', (e) => showShareOptions(e, selectedNoteIdForHeader));
+
+            // Insert buttons just before the menu button's next sibling (h1 title)
+            const title = document.querySelector('.header-title');
+            mainHeader.insertBefore(shareBtn, title.nextSibling);
+            mainHeader.insertBefore(deleteBtn, title.nextSibling);
+            mainHeader.insertBefore(editBtn, title.nextSibling);
+        }
+    };
+    
+    // Function to handle note selection/deselection for header actions
+    const handleNoteSelection = (noteId, cardElement) => {
+        // Deselect all cards
+        document.querySelectorAll('.note-card').forEach(card => {
+            card.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        });
+        
+        if (selectedNoteIdForHeader === noteId) {
+            // Deselect
+            updateHeaderActions(null);
+        } else {
+            // Select new card
+            selectedNoteIdForHeader = noteId;
+            cardElement.style.border = '2px solid var(--accent-color)';
+            updateHeaderActions(noteId);
+        }
+    };
+    
+    const setupHeaderActions = () => {
+         // This runs when the app starts, ensuring the header is clean
+         updateHeaderActions(null);
+         
+         // Event listener on the grid to handle note clicks for selection
+         notesGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('.note-card');
+            if (card) {
+                const noteId = parseInt(card.dataset.id);
+                // Check if the click was NOT on an action button inside the footer
+                if (!e.target.closest('.note-actions')) {
+                     e.stopPropagation(); // Stop propagation to prevent immediate deselecting
+                     handleNoteSelection(noteId, card);
+                }
+            } else if (!e.target.closest('.share-menu')) {
+                 // Clicked outside any card, deselect
+                 updateHeaderActions(null);
+            }
+         });
+         
+         // Global click handler to deselect if clicked outside header and cards
+         document.addEventListener('click', (e) => {
+            if (!e.target.closest('.note-card') && !e.target.closest('#main-header') && selectedNoteIdForHeader) {
+                updateHeaderActions(null);
+            }
+         });
+    };
+    
+    // RENDER NOTES
+    const renderNotes = () => {
+        notesGrid.innerHTML = '';
+        
+        // --- YEH HAI NAYA LOGIC (FIXED CODE) ---
+        const filteredNotes = notes.filter(note => {
+            if (currentFilter === 'all') {
+                // Agar 'All Notes' view hai, toh 'GF/BF' category ke notes ko mat dikhao
+                return note.category !== 'GF/BF';
+            } else {
+                // Varna, jo category select ki hai (chahe woh 'GF/BF' hi kyun na ho), uske notes dikhao
+                return note.category === currentFilter;
+            }
+        });
+        // --- BADLAAV YAHAN KHATM HOTA HAI ---
+        
+        filteredNotes.sort((a, b) => b.id - a.id).forEach(note => {
+            const noteCard = createNoteCard(note, false);
+            notesGrid.appendChild(noteCard);
+        });
+        updateHeaderActions(null); // Clear header actions on re-render
+    };
+
+    const renderDeletedNotes = () => {
+        recycleBinGrid.innerHTML = '';
+        deletedNotes.forEach(note => recycleBinGrid.appendChild(createNoteCard(note, true)));
+    };
+    
+   const createNoteCard = (note, isDeleted) => {
+        const div = document.createElement('div');
+        div.className = 'note-card';
+        div.dataset.id = note.id;
+        const creationDate = new Date(note.id).toLocaleString();
+
+        div.innerHTML = `
+            <div class="note-topic">${note.topic}</div>
+            <div class="note-content" style="font-family: ${note.font || 'inherit'};">
+            ${note.content}
+            </div>
+
+            <div class="note-footer">
+            <div class="note-meta">
+                <span class="category">${note.category}</span> - <span>${creationDate}</span>
+            </div>
+            <div class="note-copyright">© Created on NoteliFy</div>
+            <div class="note-actions ${isDeleted ? 'recycle-actions' : ''}">
+                ${isDeleted
+                ? `<button class="action-btn restore-btn" title="Restore"><i class="fas fa-undo"></i></button>
+                    <button class="action-btn delete-btn" title="Delete Permanently"><i class="fas fa-trash-alt"></i></button>`
+                : `<button class="action-btn edit-btn-card" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+                    <button class="action-btn share-btn" title="Share"><i class="fas fa-share-alt"></i></button>
+                    <button class="action-btn delete-btn-card" title="Delete"><i class="fas fa-trash"></i></button>`}
+            </div>
+            </div>
+        `;
+
+        if (isDeleted) {
+            div.querySelector('.restore-btn').addEventListener('click', () => handleRestoreNote(note.id));
+            div.querySelector('.delete-btn').addEventListener('click', () => handlePermanentDelete(note.id));
+        } else {
+            // Note: Card level edit/delete are different from header level actions
+            div.querySelector('.edit-btn-card').addEventListener('click', (e) => { e.stopPropagation(); handleEditNote(note.id); });
+            div.querySelector('.delete-btn-card').addEventListener('click', (e) => { e.stopPropagation(); handleDeleteNote(note.id); });
+            // Share button on the card now uses the corrected logic
+            div.querySelector('.share-btn').addEventListener('click', (e) => { e.stopPropagation(); showShareOptions(e, note.id); });
+        }
+
+        return div;
+    };
+
+    const handleSaveNote = () => {
+        const topic = noteTopicInput.value.trim();
+        const content = noteContentInput.innerHTML;
+        const fontFamily = localStorage.getItem('currentFont') || 'Times New Roman'; 
+
+        if (!topic || !content.trim()) return alert("Please provide a topic and content.");
+        const selectedCategory = document.querySelector('.category-item.active').dataset.category;
+        
+        if (selectedCategory === 'GF/BF' && appSettings.password && !isGfBfUnlocked) {
+            showToast('GF/BF category is locked. Please unlock it first.');
+            closeModal(noteModal);
+            return;
+        }
+
+        if (currentEditId) {
+            const noteIndex = notes.findIndex(n => n.id === currentEditId);
+            if (noteIndex > -1) {
+                notes[noteIndex] = { ...notes[noteIndex], topic, content, category: selectedCategory, font: fontFamily };
+                showToast('Note updated!');
+            }
+        } else {
+            notes.push({ id: Date.now(), topic, content, category: selectedCategory, font: fontFamily });
+            showToast('Note created!');
+        }
+
+        currentEditId = null;
+        saveNotesToStorage();
+        renderNotes();
+        closeModal(noteModal);
+    };
+
+    const handleEditNote = (id) => {
+        const note = notes.find(n => n.id === id);
+        if (note) {
+            currentEditId = id;
+            noteTopicInput.value = note.topic;
+            noteContentInput.innerHTML = note.content;
+            document.querySelector('#noteModal .modal-title').textContent = 'Edit Note';
+            
+            const font = note.font || localStorage.getItem('currentFont') || 'Times New Roman';
+            fontFamilySelector.value = font;
+            noteContentInput.style.fontFamily = font; 
+            localStorage.setItem('currentFont', font);
+            
+            openModal(noteModal);
+        }
+    };
+    const handleDeleteNote = (id) => {
+        const noteIndex = notes.findIndex(n => n.id === id);
+        if (noteIndex > -1) {
+            const [deletedNote] = notes.splice(noteIndex, 1);
+            deletedNotes.push(deletedNote);
+            saveNotesToStorage();
+            renderNotes();
+            showToast('Note moved to Recycle Bin');
+        }
+    };
+    const handleRestoreNote = (id) => {
+        const noteIndex = deletedNotes.findIndex(n => n.id === id);
+        if (noteIndex > -1) {
+            const [restoredNote] = deletedNotes.splice(noteIndex, 1);
+            notes.push(restoredNote);
+            saveNotesToStorage();
+            renderDeletedNotes();
+            showToast('Note restored!');
+        }
+    };
+    const handlePermanentDelete = (id) => {
+        if (confirm('Are you sure you want to permanently delete this note?')) {
+            deletedNotes = deletedNotes.filter(n => n.id !== id);
+            saveNotesToStorage();
+            renderDeletedNotes();
+            showToast('Note permanently deleted');
+        }
+    };
+    
+    const handleCategoryClick = (e) => {
+        const targetCategory = e.currentTarget.dataset.category;
+        
+        if (noteModal.classList.contains('active')) {
+            showToast('Please save or cancel the current note before changing the category filter.');
+            return;
+        }
+
+        const proceedToCategory = () => {
+            if (targetCategory !== 'GF/BF') {
+                isGfBfUnlocked = false; 
+            } else {
+                isGfBfUnlocked = true;
+            }
+            
+            categoryItems.forEach(item => item.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            currentFilter = targetCategory;
+            renderNotes();
+            appContainer.classList.add('sidebar-collapsed'); 
+        };
+        
+        if (targetCategory === 'GF/BF' && appSettings.password) {
+            if (isGfBfUnlocked) {
+                proceedToCategory();
+            } else {
+                onPasswordSuccessCallback = proceedToCategory; 
+                openPasswordDialog(); 
+            }
+        } else {
+            proceedToCategory();
+        }
+    };
+
+    // ****** YAHAN JS MEIN BADLAAV KIYA GAYA HAI (loadSettings) ******
+    const loadSettings = () => {
+        usernameInput.value = appSettings.username;
+        notificationToggle.checked = appSettings.notifications;
+        applyAppTheme(appSettings.appTheme);
+        
+        // Logic to show/hide old password field and update status
+        if (appSettings.password) {
+            passwordStatus.textContent = 'Current Password is SET.';
+            oldPasswordInput.style.display = 'block'; // Show old password field
+            savePasswordBtn.textContent = 'Change Password';
+            passwordInput.placeholder = 'Enter New Password (Leave empty to remove)';
+        } else {
+            passwordStatus.textContent = 'No Password is SET.';
+            oldPasswordInput.style.display = 'none'; // Hide old password field
+            savePasswordBtn.textContent = 'Set Password';
+            passwordInput.placeholder = 'Set a Password';
+        }
+        oldPasswordInput.value = '';
+        passwordInput.value = '';
+    };
+    // *************************************************************
+
+    const saveSettings = () => {
+        appSettings.username = usernameInput.value.trim();
+        appSettings.notifications = notificationToggle.checked;
+        localStorage.setItem('appSettings', JSON.stringify(appSettings));
+        showToast('Settings saved!');
+        showWelcomeMessage(); 
+    };
+
+    // ****** YAHAN JS MEIN BADLAAV KIYA GAYA HAI (savePassword) ******
+    const savePassword = () => {
+        const newPassword = passwordInput.value.trim();
+        const oldPassword = oldPasswordInput.value.trim();
+
+        // 1. Check if the user is trying to change an existing password
+        if (appSettings.password) {
+            
+            if (oldPassword === '') {
+                alert('Please enter your Old Password to proceed.');
+                oldPasswordInput.focus();
+                return;
+            }
+            
+            if (oldPassword !== appSettings.password) {
+                alert('Incorrect Old Password. Cannot change password.');
+                oldPasswordInput.value = '';
+                oldPasswordInput.focus();
+                return;
+            }
+            
+            // If old password is correct:
+            if (newPassword) {
+                // Change to a new password
+                appSettings.password = newPassword;
+                localStorage.setItem('appSettings', JSON.stringify(appSettings));
+                showToast('Password changed successfully!');
+            } else {
+                 // If old password is correct but new password is empty, user might want to remove it
+                 if (confirm('Are you sure you want to remove the password?')) {
+                     appSettings.password = null;
+                     localStorage.setItem('appSettings', JSON.stringify(appSettings));
+                     showToast('Password removed successfully!');
+                 } else {
+                     return;
+                 }
+            }
+            
+        } else {
+            // 2. Setting a password for the first time
+            if (newPassword) {
+                appSettings.password = newPassword;
+                localStorage.setItem('appSettings', JSON.stringify(appSettings));
+                showToast('Password set successfully!');
+            } else {
+                alert('Please enter a new password to set one.');
+                return;
+            }
+        }
+        
+        // Reset and re-load settings UI after a successful save
+        oldPasswordInput.value = '';
+        passwordInput.value = '';
+        loadSettings(); 
+    };
+    // *************************************************************
+
+   const handleToolbarCommand = (button) => {
+        const command = button.dataset.command;
+        const value = button.dataset.value || null;
+
+        noteContentInput.focus();
+        
+        // --- EXECUTE THE COMMAND FIRST ---
+        document.execCommand(command, false, value);
+        
+        // --- FONT PRESERVATION LOGIC ---
+        const currentFont = localStorage.getItem('currentFont') || 'Times New Roman';
+        
+        if (command === 'bold' || command === 'italic' || command === 'underline' || command === 'foreColor' || command === 'backColor') {
+            
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            const tagName = command === 'bold' ? 'B' : command === 'italic' ? 'I' : command === 'underline' ? 'U' : 'FONT';
+            const range = selection.getRangeAt(0);
+
+            noteContentInput.querySelectorAll(tagName).forEach(tag => {
+                if (range.intersectsNode(tag) || tag.contains(range.startContainer) || tag.contains(range.endContainer)) {
+                    tag.style.fontFamily = currentFont;
+                }
+            });
+            
+            if (range.collapsed && (command === 'bold' || command === 'italic' || command === 'underline')) {
+                const closestTag = range.startContainer.closest(tagName);
+                if (closestTag && noteContentInput.contains(closestTag)) {
+                    closestTag.style.fontFamily = currentFont;
+                }
+            }
+        }
+        
+        // --- END FONT PRESERVATION LOGIC ---
+        
+        if (command === 'insertText' || command === 'insertHTML') {
+             // Handle insert separately to avoid execCommand issues
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            const range = selection.getRangeAt(0);
+            
+            if (command === 'insertText') {
+                range.insertNode(document.createTextNode(value));
+            } else if (command === 'insertHTML') {
+                const temp = document.createElement('div');
+                temp.innerHTML = value;
+                const node = temp.firstChild;
+                range.insertNode(node);
+            }
+        }
+        
+        noteContentInput.focus();
+    };
+    
+    const showImageToolbar = (imgElement) => {
+        selectedImage = imgElement;
+        selectedImage.classList.add('selected-img');
+        const rect = selectedImage.getBoundingClientRect();
+        imageToolbar.style.display = 'flex';
+        const editorRect = noteContentInput.getBoundingClientRect();
+        
+        imageToolbar.style.top = `${rect.top - imageToolbar.offsetHeight - 5 + noteContentInput.scrollTop - editorRect.top}px`;
+        imageToolbar.style.left = `${rect.left + (rect.width / 2) - (imageToolbar.offsetWidth / 2)}px`;
+        const rotationMatch = selectedImage.style.transform.match(/rotate\((.+)deg\)/);
+        currentImageRotation = rotationMatch ? parseInt(rotationMatch[1]) : 0;
+    };
+    const hideImageToolbar = () => {
+        if (selectedImage) selectedImage.classList.remove('selected-img');
+        selectedImage = null;
+        imageToolbar.style.display = 'none';
+    };
+    const handleImageToolbarAction = (e) => {
+        const button = e.target.closest('button');
+        if (!button || !selectedImage) return;
+        const { action, value } = button.dataset;
+        if (action === 'align') {
+            selectedImage.style.float = value === 'center' ? 'none' : value;
+            selectedImage.style.display = value === 'center' ? 'block' : 'inline-block';
+            selectedImage.style.margin = value === 'center' ? '10px auto' : '10px';
+        }
+        if (action === 'resize') selectedImage.style.width = value;
+        if (action === 'rotate') {
+            currentImageRotation += parseInt(value);
+            selectedImage.style.transform = `rotate(${currentImageRotation}deg)`;
+        }
+    };
+
+    const shareAsText = (note) => {
+        const textToShare = `${note.topic}\n\n${note.content.replace(/<[^>]+>/g, '')}`;
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textToShare)}`, '_blank');
+    };
+
+    // --- SHARE & DOWNLOAD FUNCTIONALITY (The corrected block) ---
+    
+    /**
+     * यह फ़ंक्शन नोट को कैप्चर करता है और उसे एक वेब-आधारित डाउनलोड के रूप में ट्रिगर करता है।
+     * (SPCK Code Editor / Browser Environment के लिए उपयुक्त)
+     */
+    function captureAndDownload(noteId, triggerDownload, filenamePrefix) {
+        const noteCard = document.querySelector(`.note-card[data-id="${noteId}"]`);
+        if (!noteCard) {
+            showToast('Error: Note card not found.');
+            return;
+        }
+
+        showToast('Processing image for download...');
+
+        // 1. html2canvas का उपयोग करके नोट को कैप्चर करें
+        html2canvas(noteCard, {
+            scale: 2, 
+            useCORS: true,
+            backgroundColor: null,
+        }).then(canvas => {
+            
+            // 2. Canvas को PNG Image URL में बदलें
+            const imageURL = canvas.toDataURL('image/png');
+            const filename = `${filenamePrefix}_${noteId}.png`;
+
+            // 3. पारंपरिक 'a' टैग विधि का उपयोग करके डाउनलोड ट्रिगर करें
+            // यह ब्राउज़र को डाउनलोड शुरू करने के लिए संकेत देता है।
+            const a = document.createElement('a');
+            a.href = imageURL;
+            a.download = filename; // फ़ाइल का नाम सेट करें
+            
+            // a.click() तभी काम करता है जब 'a' टैग DOM में हो
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a); // तुरंत हटा दें
+
+            // 4. Toast Message
+            if (triggerDownload) {
+                showToast('Download initiated! Check your phone notifications/browser for the file.');
+            } else {
+                 showToast('Image downloaded. Please upload it to share.');
+            }
+
+        }).catch(error => {
+            console.error('Error capturing and downloading note:', error);
+            showToast('Error saving note. Check console.');
+        });
+    }
+
+    // Since we removed the Native App logic, the hybridShareAsImage is simplified
+    // to just call captureAndDownload (which now handles the web download).
+    function hybridShareAsImage(noteId) {
+        showToast('Preparing image for sharing...');
+        // For SPCK/Browser, sharing as image means downloading and asking the user to upload it.
+        captureAndDownload(noteId, false, 'whatsapp_share'); 
+    }
+
+    const downloadNote = (noteId) => {
+        captureAndDownload(noteId, true, 'notefly_download');
+    };
+    
+    const showShareOptions = (e, noteId) => {
+        // Remove any existing share menus
+        document.querySelectorAll('.share-menu').forEach(menu => menu.remove());
+
+        const note = notes.find(n => n.id === noteId);
+        if (!note) return;
+
+        const shareMenu = document.createElement('div');
+        shareMenu.className = 'share-menu';
+
+        // 1. Share note as Image (Hybrid - calls browser download)
+        const shareAsImageOption = document.createElement('div');
+        shareAsImageOption.className = 'share-option';
+        shareAsImageOption.innerHTML = '<i class="fas fa-share-alt"></i> Share as Image'; // Icon/Text updated
+        shareAsImageOption.onclick = () => {
+            hybridShareAsImage(noteId); // <-- SIMPLIFIED HYBRID FUNCTION CALL
+            shareMenu.remove();
+        };
+
+        // 2. Share note as Text to WhatsApp
+        const shareAsTextOption = document.createElement('div');
+        shareAsTextOption.className = 'share-option';
+        shareAsTextOption.innerHTML = '<i class="fab fa-whatsapp"></i> Share as Text';
+        shareAsTextOption.onclick = () => {
+            shareAsText(note);
+            shareMenu.remove();
+        };
+
+        // 3. Download note as Image
+        const downloadNoteOption = document.createElement('div');
+        downloadNoteOption.className = 'share-option';
+        downloadNoteOption.innerHTML = '<i class="fas fa-download"></i> Download Note as Image';
+        downloadNoteOption.onclick = () => {
+            showToast('Downloading note as image...');
+            downloadNote(noteId); 
+            shareMenu.remove();
+        };
+
+        shareMenu.appendChild(shareAsImageOption); // Updated option
+        shareMenu.appendChild(shareAsTextOption);
+        shareMenu.appendChild(downloadNoteOption);
+
+        // Position the menu
+        const buttonRect = e.currentTarget.getBoundingClientRect();
+        
+        // Append to body first to measure its width/height
+        document.body.appendChild(shareMenu);
+        
+        // Calculate position relative to viewport/page scroll
+        let menuTop = buttonRect.bottom + window.scrollY + 5;
+        let menuLeft = buttonRect.right + window.scrollX - shareMenu.offsetWidth;
+        
+        // Adjust position to stay on screen (especially if opened from header)
+        if (menuLeft < 10) { 
+             menuLeft = 10;
+        } else if (menuLeft + shareMenu.offsetWidth > window.innerWidth) {
+             menuLeft = window.innerWidth - shareMenu.offsetWidth - 10;
+        }
+        
+        // Set final position
+        shareMenu.style.top = `${menuTop}px`;
+        shareMenu.style.left = `${menuLeft}px`;
+
+        // Close menu on outside click
+        document.addEventListener('click', function closeMenu(event) {
+            // Check if the click was outside the menu AND not on the button that opened it
+            if (!shareMenu.contains(event.target) && event.target !== e.currentTarget && !e.currentTarget.contains(event.target)) {
+                shareMenu.remove();
+                document.removeEventListener('click', closeMenu);
+            }
+        });
+        
+        e.stopPropagation(); // Prevent the main grid's click handler from immediately deselecting the note
+    };
+
+    // --- END: SHARE & DOWNLOAD FUNCTIONALITY ---
+
+    const addEventListeners = () => {
+        menuButton.addEventListener('click', () => appContainer.classList.toggle('sidebar-collapsed'));
+        
+        addNoteButton.addEventListener('click', () => {
+            currentEditId = null;
+            noteTopicInput.value = '';
+            noteContentInput.innerHTML = '';
+            document.querySelector('#noteModal .modal-title').textContent = 'Create Note';
+            
+            const savedFont = localStorage.getItem('currentFont') || 'Times New Roman';
+            fontFamilySelector.value = savedFont;
+            noteContentInput.style.fontFamily = savedFont;
+            
+            const activeCategory = document.querySelector('.category-item.active').dataset.category;
+            if (activeCategory === 'GF/BF' && appSettings.password && !isGfBfUnlocked) {
+                 showToast('Please unlock the GF/BF category first.');
+                 return;
+            }
+            openModal(noteModal);
+        });
+        document.querySelectorAll('[data-close-modal]').forEach(b => b.addEventListener('click', () => closeModal(document.getElementById(b.dataset.closeModal))));
+        
+        noteModal.querySelector('.modal-content').addEventListener('click', (e) => { 
+            e.stopPropagation(); 
+        });
+        
+        saveNoteButton.addEventListener('click', handleSaveNote);
+        
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const page = button.dataset.page;
+                document.querySelector('.nav-button.active').classList.remove('active');
+                button.classList.add('active');
+                allModals.forEach(closeModal);
+                addNoteButton.style.display = (page === 'home') ? 'flex' : 'none';
+                if (page === 'settings') { loadSettings(); openModal(settingsModal); }
+                else if (page === 'recyclebin') { renderDeletedNotes(); openModal(recycleBinModal); }
+            });
+        });
+        
+        categoryItems.forEach(item => item.addEventListener('click', handleCategoryClick));
+        
+        saveUsernameBtn.addEventListener('click', saveSettings);
+        savePasswordBtn.addEventListener('click', savePassword);
+        notificationToggle.addEventListener('change', saveSettings);
+
+        themeOptions.addEventListener('click', (e) => { if (e.target.classList.contains('theme-preview')) applyAppTheme(e.target.dataset.theme); });
+        
+        passwordPromptSubmit.addEventListener('click', () => {
+            passwordPromptError.textContent = ''; 
+
+            if (passwordPromptInput.value === appSettings.password) {
+                isGfBfUnlocked = true; 
+                showToast('GF/BF category unlocked!');
+                
+                closePasswordDialog();
+                if (onPasswordSuccessCallback) {
+                    onPasswordSuccessCallback(); 
+                    onPasswordSuccessCallback = null;
+                }
+            } else {
+                passwordPromptError.textContent = 'Incorrect password. Please try again.';
+                passwordPromptBox.classList.add('shake');
+                passwordPromptInput.focus();
+                showToast('Incorrect password!'); 
+                
+                setTimeout(() => passwordPromptBox.classList.remove('shake'), 500);
+            }
+        });
+
+        passwordPromptCancel.addEventListener('click', () => {
+            closePasswordDialog();
+            onPasswordSuccessCallback = null; 
+        });
+
+        passwordPromptInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                passwordPromptSubmit.click(); 
+            }
+        });
+
+        editorToolbar.addEventListener('click', (e) => {
+            const btn = e.target.closest('.tool-btn');
+            if (btn) handleToolbarCommand(btn);
+        });
+
+        fontFamilySelector.addEventListener('change', (e) => {
+            const font = e.target.value;
+            localStorage.setItem('currentFont', font);
+            
+            noteContentInput.focus();
+            
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                 const range = selection.getRangeAt(0);
+                 
+                 if (!range.collapsed) { 
+                     
+                     const content = range.extractContents();
+                     const span = document.createElement('span');
+                     span.style.fontFamily = font;
+                     span.appendChild(content);
+                     
+                     range.insertNode(span);
+                     
+                     range.setStartAfter(span);
+                     range.setEndAfter(span);
+                     selection.removeAllRanges();
+                     selection.addRange(range);
+
+                 } else {
+                    const span = document.createElement('span');
+                    span.style.fontFamily = font;
+                    span.innerHTML = '&#8203;'; 
+                    
+                    range.insertNode(span);
+                    
+                    range.setStart(span.firstChild, 0); 
+                    range.setEnd(span.firstChild, 0); 
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                 }
+            }
+            document.execCommand('fontName', false, 'DUMMY_FONT_NAME'); 
+            noteContentInput.focus();
+        });
+
+        document.getElementById('fontColorPicker').addEventListener('input', (e) => {
+            handleToolbarCommand({ dataset: { command: 'foreColor', value: e.target.value } });
+        });
+        document.getElementById('highlightColorPicker').addEventListener('input', (e) => {
+             handleToolbarCommand({ dataset: { command: 'backColor', value: e.target.value } });
+        });
+
+        const savedFont = localStorage.getItem('currentFont');
+        if (savedFont) {
+            fontFamilySelector.value = savedFont;
+            noteContentInput.style.fontFamily = savedFont;
+        }
+
+        uploadImageBtn.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', () => {
+            const file = imageInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const currentFont = localStorage.getItem('currentFont') || 'Times New Roman';
+                    const img = `<img src="${e.target.result}" style="max-width: 100%; display: block; margin: 10px auto;" />`;
+                    noteContentInput.focus();
+                    document.execCommand('insertHTML', false, img);
+                    
+                    document.execCommand('insertHTML', false, `<p style="font-family: ${currentFont};"> &nbsp;</p>`);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        noteContentInput.addEventListener('click', (e) => {
+            if (e.target.tagName === 'IMG') { e.stopPropagation(); showImageToolbar(e.target); } 
+            else { hideImageToolbar(); }
+        });
+        imageToolbar.addEventListener('click', handleImageToolbarAction);
+        
+        noteContentInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && document.activeElement === noteContentInput) {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const currentLi = range.startContainer.closest('li');
+            if (currentLi) {
+              e.preventDefault();
+              const newLi = document.createElement('li');
+              newLi.textContent = ''; 
+              currentLi.parentNode.insertBefore(newLi, currentLi.nextSibling);
+              const newRange = document.createRange();
+              newRange.selectNodeContents(newLi);
+              newRange.collapse(true);
+              selection.removeAllRanges();
+              selection.addRange(newRange);
+            }
+          }
+        });
+        
+        noteContentInput.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter') {
+            const currentFont = localStorage.getItem('currentFont') || 'Times New Roman';
+            const selection = window.getSelection();
+            
+            if (selection.rangeCount > 0) {
+              const range = selection.getRangeAt(0);
+              
+              let currentNode = range.startContainer.nodeType === 3 ? range.startContainer.parentNode : range.startContainer;
+              
+              while (currentNode && currentNode !== noteContentInput && currentNode.tagName !== 'P' && currentNode.tagName !== 'DIV' && currentNode.tagName !== 'LI') {
+                  currentNode = currentNode.parentNode;
+              }
+
+              if (currentNode && (currentNode.tagName === 'P' || currentNode.tagName === 'DIV')) {
+                  currentNode.style.fontFamily = currentFont;
+                  
+                  if (currentNode.innerHTML === '' || currentNode.innerHTML === '<br>') {
+                      const span = document.createElement('span');
+                      span.style.fontFamily = currentFont;
+                      span.innerHTML = '&#8203;'; 
+                      currentNode.innerHTML = ''; 
+                      currentNode.appendChild(span);
+                      
+                      range.setStart(span.firstChild, 0); 
+                      range.setEnd(span.firstChild, 0); 
+                      selection.removeAllRanges();
+                      selection.addRange(range);
+                  }
+              }
+            }
+          }
+        });
+    };
+
+    init();
+});
+
+    
+  </script>
+
+
+</body>
+
+</html>
